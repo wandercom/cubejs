@@ -12,6 +12,7 @@ from cubejs import (
     get_measures,
 )
 from cubejs.client import _error_handler
+from cubejs.model import FilterOperators, Granularity, OrderBy
 
 
 @pytest.mark.asyncio
@@ -49,7 +50,7 @@ async def test_get_metrics(httpx_mock):
             time_dimensions=[
                 TimeDimension(
                     dimension="orders.created_at",
-                    granularity="day",
+                    granularity=Granularity.DAY,
                     date_range="last 30 days",
                 )
             ],
@@ -57,11 +58,11 @@ async def test_get_metrics(httpx_mock):
             filters=[
                 Filter(
                     member="orders.status",
-                    operator="equals",
+                    operator=FilterOperators.EQUALS,
                     values=["completed", "processing"],
                 )
             ],
-            order={"orders.count": "desc"},
+            order={"orders.count": OrderBy.DESC},
         ),
     )
 
