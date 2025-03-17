@@ -1,5 +1,6 @@
 # globals
 VERSION := $(shell uvx --from=toml-cli toml get --toml-path=pyproject.toml project.version)
+GH := $(shell command -v gh 2> /dev/null)
 
 define PRINT_HELP_PYSCRIPT
 import re, sys
@@ -13,6 +14,10 @@ for line in sys.stdin:
 print("\nCheck the Makefile for more information")
 endef
 export PRINT_HELP_PYSCRIPT
+
+define check_gh
+    @if [ -z $(GH) ]; then echo "gh could not be found. See https://cli.github.com/"; exit 2; fi
+endef
 
 .PHONY: help
 .DEFAULT_GOAL := help
@@ -53,3 +58,13 @@ test:
 .PHONY: version
 version: ## package version
 	@echo '${VERSION}'
+
+.PHONY: release-github
+release-github:  ## release to github
+	$(call check_gh)
+	@echo "Releasing version $$(make version) to github..."
+	@$(GH) release create v$$(make version) --notes "Release v$$(make version)"
+
+.PHONY: release
+release: release-github
+	@echo "🏷 Release $$(make version) complete!"

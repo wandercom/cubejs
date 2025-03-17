@@ -1,6 +1,6 @@
 [project]
 name = "cubejs"
-version = "0.1.0"
+version = "0.2.0"
 description = "unofficial async cubejs python client"
 authors = [
     {name = "Wander"}
