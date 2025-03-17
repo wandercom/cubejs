@@ -45,10 +45,6 @@ type-check:
 	@echo "Running type checks..."
 	uv run mypy cubejs
 
-test:
-	@echo "Running tests..."
-	uv run pytest tests/
-
 checks: style-check type-check  ## run all code checks
 
 test:
