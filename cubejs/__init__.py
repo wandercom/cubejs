@@ -7,6 +7,10 @@ from cubejs.model import (
     CubeJSRequest,
     CubeJSResponse,
     Filter,
+    FilterOperators,
+    Granularity,
+    LogicalOperator,
+    OrderBy,
     TimeDimension,
 )
 
@@ -18,4 +22,8 @@ __all__ = [
     "CubeJSResponse",
     "TimeDimension",
     "Filter",
+    "OrderBy",
+    "Granularity",
+    "FilterOperators",
+    "LogicalOperator",
 ]
