@@ -53,3 +53,10 @@ class ContinueWaitError(RetryableError):
 
     def __str__(self) -> str:
         return "CubeJS query is not ready yet, continue waiting..."
+
+
+class BadGatewayError(RetryableError):
+    """Raised when CubeJS responds with 'Bad Gateway'."""
+
+    def __str__(self) -> str:
+        return "CubeJS may be scaling instances, attempting a retry..."

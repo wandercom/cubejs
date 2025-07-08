@@ -99,7 +99,7 @@ def test_error_handler():
     with pytest.raises(errors.ContinueWaitError) as continue_wait_error:
         _error_handler(Mock(status_code=200, text="Continue wait"))
 
-    with pytest.raises(errors.RetryableError) as retryable_error:
+    with pytest.raises(errors.BadGatewayError) as bad_gateway_error:
         _error_handler(Mock(status_code=502, text="Bad Gateway"))
 
     with pytest.raises(errors.ServerError) as server_error:
@@ -117,4 +117,4 @@ def test_error_handler():
     )
     assert str(server_error.value) == "CubeJS server error: "
     assert str(unexpected_response_error.value) == "CubeJS unexpected response: "
-    assert "we can attempt a retry" in str(retryable_error.value)
+    assert "attempting a retry" in str(bad_gateway_error.value)

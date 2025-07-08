@@ -6,6 +6,7 @@ from loguru import logger
 
 from cubejs.errors import (
     AuthorizationError,
+    BadGatewayError,
     ContinueWaitError,
     RequestError,
     RetryableError,
@@ -34,7 +35,7 @@ def _error_handler(response: httpx.Response) -> None:
     if "Continue wait" in response.text:
         raise ContinueWaitError()
     if response.status_code == 502:
-        raise RetryableError()
+        raise BadGatewayError()
     if response.status_code == 500:
         raise ServerError(response.text)
     if response.status_code != 200:
