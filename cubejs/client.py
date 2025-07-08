@@ -6,8 +6,10 @@ from loguru import logger
 
 from cubejs.errors import (
     AuthorizationError,
+    BadGatewayError,
     ContinueWaitError,
     RequestError,
+    RetryableError,
     ServerError,
     UnexpectedResponseError,
 )
@@ -32,6 +34,8 @@ def _error_handler(response: httpx.Response) -> None:
         raise RequestError(response.text)
     if "Continue wait" in response.text:
         raise ContinueWaitError()
+    if response.status_code == 502:
+        raise BadGatewayError()
     if response.status_code == 500:
         raise ServerError(response.text)
     if response.status_code != 200:
@@ -39,7 +43,7 @@ def _error_handler(response: httpx.Response) -> None:
 
 
 @tenacity.retry(
-    retry=tenacity.retry_if_exception_type(ContinueWaitError),
+    retry=tenacity.retry_if_exception_type(RetryableError),
     wait=tenacity.wait_exponential(multiplier=2, min=1, max=30),
     stop=tenacity.stop_after_attempt(5),
 )
