@@ -1,16 +1,6 @@
 """Errors expected from CubeJS server."""
 
 
-class ContinueWaitError(Exception):
-    """Raised when CubeJS responds with 'Continue wait' message."""
-
-    def __init__(self) -> None:
-        pass
-
-    def __str__(self) -> str:
-        return "CubeJS query is not ready yet, continue waiting..."
-
-
 class ServerError(Exception):
     """Raised when CubeJS responds with an error."""
 
@@ -49,3 +39,17 @@ class UnexpectedResponseError(Exception):
 
     def __str__(self) -> str:
         return f"CubeJS unexpected response: {self.message}"
+
+
+class RetryableError(Exception):
+    """Raised when a retry can be performed."""
+
+    def __str__(self) -> str:
+        return "CubeJS failed but we can attempt a retry"
+
+
+class ContinueWaitError(RetryableError):
+    """Raised when CubeJS responds with 'Continue wait' message."""
+
+    def __str__(self) -> str:
+        return "CubeJS query is not ready yet, continue waiting..."
