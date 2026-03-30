@@ -110,6 +110,9 @@ init_typed = false
 warn_required_dynamic_aliases = false
 warn_untyped_fields = true
 
+[tool.uv]
+exclude-newer = "7 days"
+
 [build-system]
 requires = ["pdm-backend", "pip"]
 build-backend = "pdm.backend"
