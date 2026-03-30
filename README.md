@@ -83,6 +83,12 @@ At Wander, we use a semantic layer to:
 - Our data warehouse becomes a technical detail so we can focus on building great 
   products.
 
+## Dependency management
+
+This project uses [uv](https://github.com/astral-sh/uv) with `pyproject.toml` for dependency management. A `uv.lock` lockfile is committed to pin exact resolved versions for reproducible environments.
+
+To guard against [Python supply chain attacks](https://pydevtools.com/handbook/how-to/how-to-protect-against-python-supply-chain-attacks-with-uv/), the `[tool.uv]` section in `pyproject.toml` sets a 7-day dependency cooldown via `exclude-newer`. This prevents uv from resolving package versions published within the last week — a window during which most malicious PyPI uploads are detected and yanked before they can reach any environment.
+
 ## License
 MIT
 
