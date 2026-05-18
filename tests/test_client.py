@@ -4,6 +4,7 @@ import pytest
 
 from cubejs import (
     CubeJSAuth,
+    CubeJSMetaResponse,
     CubeJSRequest,
     CubeJSResponse,
     Filter,
@@ -97,9 +98,41 @@ async def test_list_cubes(httpx_mock):
         url="https://host/cubejs-api/v1/meta",
         json={
             "cubes": [
-                {"name": "Orders", "title": "Orders", "type": "cube"},
-                {"name": "Users", "title": "Users", "type": "cube"},
-                {"name": "OrdersView", "title": "Orders View", "type": "view"},
+                {
+                    "name": "Users",
+                    "title": "Users",
+                    "meta": {
+                        "someKey": "someValue",
+                        "nested": {"someKey": "someValue"},
+                    },
+                    "connectedComponent": 1,
+                    "measures": [
+                        {
+                            "name": "users.count",
+                            "title": "Users Count",
+                            "shortTitle": "Count",
+                            "aliasName": "users.count",
+                            "type": "number",
+                            "aggType": "count",
+                            "drillMembers": [
+                                "users.id",
+                                "users.city",
+                                "users.createdAt",
+                            ],
+                        }
+                    ],
+                    "dimensions": [
+                        {
+                            "name": "users.city",
+                            "title": "Users City",
+                            "type": "string",
+                            "aliasName": "users.city",
+                            "shortTitle": "City",
+                            "suggestFilterValues": True,
+                        }
+                    ],
+                    "segments": [],
+                }
             ]
         },
     )
@@ -108,7 +141,24 @@ async def test_list_cubes(httpx_mock):
     output = await list_cubes(auth=CubeJSAuth(token="token", host="https://host"))
 
     # assert
-    assert output == ["Orders", "Users", "OrdersView"]
+    assert isinstance(output, CubeJSMetaResponse)
+    assert len(output.cubes) == 1
+    assert output.cubes[0].name == "Users"
+    assert output.cubes[0].title == "Users"
+    assert output.cubes[0].meta["someKey"] == "someValue"
+    assert output.cubes[0].meta["nested"]["someKey"] == "someValue"
+    assert output.cubes[0].connected_component == 1
+    assert output.cubes[0].measures[0].short_title == "Count"
+    assert output.cubes[0].measures[0].alias_name == "users.count"
+    assert output.cubes[0].measures[0].agg_type == "count"
+    assert output.cubes[0].measures[0].drill_members == [
+        "users.id",
+        "users.city",
+        "users.createdAt",
+    ]
+    assert output.cubes[0].dimensions[0].short_title == "City"
+    assert output.cubes[0].dimensions[0].suggest_filter_values is True
+    assert output.cubes[0].segments == []
 
 
 @pytest.mark.asyncio

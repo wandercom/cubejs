@@ -13,7 +13,7 @@ from cubejs.errors import (
     ServerError,
     UnexpectedResponseError,
 )
-from cubejs.model import CubeJSAuth, CubeJSRequest, CubeJSResponse
+from cubejs.model import CubeJSAuth, CubeJSMetaResponse, CubeJSRequest, CubeJSResponse
 
 
 def _error_handler(response: httpx.Response) -> None:
@@ -83,14 +83,14 @@ async def get_measures(auth: CubeJSAuth, request: CubeJSRequest) -> CubeJSRespon
     wait=tenacity.wait_exponential(multiplier=2, min=1, max=30),
     stop=tenacity.stop_after_attempt(5),
 )
-async def list_cubes(auth: CubeJSAuth) -> list[str]:
+async def list_cubes(auth: CubeJSAuth) -> CubeJSMetaResponse:
     """List cubes and views available in cubejs metadata endpoint.
 
     Args:
         auth: cubejs auth.
 
     Returns:
-        List of cube and view names available in the semantic layer.
+        CubeJS metadata response with available cubes and views.
 
     Raises:
         AuthorizationError: if the request is not authorized.
@@ -107,10 +107,6 @@ async def list_cubes(auth: CubeJSAuth) -> list[str]:
         response = await client.get(url=url, headers=headers)
         _error_handler(response)
 
-    cube_names = [
-        cube["name"]
-        for cube in response.json().get("cubes", [])
-        if isinstance(cube, dict) and isinstance(cube.get("name"), str)
-    ]
-    logger.debug(f"Retrieved {len(cube_names)} cubes/views from metadata")
-    return cube_names
+    meta_response = CubeJSMetaResponse(**response.json())
+    logger.debug(f"Retrieved {len(meta_response.cubes)} cubes/views from metadata")
+    return meta_response
