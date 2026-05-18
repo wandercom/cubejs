@@ -1,6 +1,6 @@
 """CubeJS client package."""
 
-from cubejs.client import get_measures
+from cubejs.client import get_measures, list_cubes
 from cubejs.errors import ContinueWaitError
 from cubejs.model import (
     CubeJSAuth,
@@ -16,6 +16,7 @@ from cubejs.model import (
 
 __all__ = [
     "get_measures",
+    "list_cubes",
     "ContinueWaitError",
     "CubeJSAuth",
     "CubeJSRequest",

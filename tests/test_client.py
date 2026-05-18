@@ -10,6 +10,7 @@ from cubejs import (
     TimeDimension,
     errors,
     get_measures,
+    list_cubes,
 )
 from cubejs.client import _error_handler
 from cubejs.model import FilterOperators, Granularity, OrderBy
@@ -86,6 +87,43 @@ async def test_get_metrics(httpx_mock):
             },
         ]
     )
+
+
+@pytest.mark.asyncio
+async def test_list_cubes(httpx_mock):
+    # arrange
+    httpx_mock.add_response(
+        method="GET",
+        url="https://host/cubejs-api/v1/meta",
+        json={
+            "cubes": [
+                {"name": "Orders", "title": "Orders", "type": "cube"},
+                {"name": "Users", "title": "Users", "type": "cube"},
+                {"name": "OrdersView", "title": "Orders View", "type": "view"},
+            ]
+        },
+    )
+
+    # act
+    output = await list_cubes(auth=CubeJSAuth(token="token", host="https://host"))
+
+    # assert
+    assert output == ["Orders", "Users", "OrdersView"]
+
+
+@pytest.mark.asyncio
+async def test_list_cubes_raises_on_request_error(httpx_mock):
+    # arrange
+    httpx_mock.add_response(
+        method="GET",
+        url="https://host/cubejs-api/v1/meta",
+        status_code=400,
+        text="bad request",
+    )
+
+    # act / assert
+    with pytest.raises(errors.RequestError):
+        await list_cubes(auth=CubeJSAuth(token="token", host="https://host"))
 
 
 def test_error_handler():
