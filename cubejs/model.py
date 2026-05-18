@@ -1,5 +1,7 @@
 """Data model."""
 
+from __future__ import annotations
+
 from enum import Enum
 from typing import Any
 
@@ -245,9 +247,9 @@ class CubeJSMetaCube(BaseModel):
     type: str | None = None
     meta: dict[str, Any] | None = None
     connected_component: int | None = Field(default=None, alias="connectedComponent")
-    measures: list["CubeJSMetaMeasure"] = Field(default_factory=list)
-    dimensions: list["CubeJSMetaDimension"] = Field(default_factory=list)
-    segments: list["CubeJSMetaSegment"] = Field(default_factory=list)
+    measures: list[CubeJSMetaMeasure] = Field(default_factory=list)
+    dimensions: list[CubeJSMetaDimension] = Field(default_factory=list)
+    segments: list[CubeJSMetaSegment] = Field(default_factory=list)
 
     class Config:  # noqa: D106
         populate_by_name = True
