@@ -4,12 +4,14 @@ import pytest
 
 from cubejs import (
     CubeJSAuth,
+    CubeJSMetaResponse,
     CubeJSRequest,
     CubeJSResponse,
     Filter,
     TimeDimension,
     errors,
     get_measures,
+    list_cubes,
 )
 from cubejs.client import _error_handler
 from cubejs.model import FilterOperators, Granularity, OrderBy
@@ -86,6 +88,92 @@ async def test_get_metrics(httpx_mock):
             },
         ]
     )
+
+
+@pytest.mark.asyncio
+async def test_list_cubes(httpx_mock):
+    # arrange
+    httpx_mock.add_response(
+        method="GET",
+        url="https://host/cubejs-api/v1/meta",
+        json={
+            "cubes": [
+                {
+                    "name": "Users",
+                    "title": "Users",
+                    "meta": {
+                        "someKey": "someValue",
+                        "nested": {"someKey": "someValue"},
+                    },
+                    "connectedComponent": 1,
+                    "measures": [
+                        {
+                            "name": "users.count",
+                            "title": "Users Count",
+                            "shortTitle": "Count",
+                            "aliasName": "users.count",
+                            "type": "number",
+                            "aggType": "count",
+                            "drillMembers": [
+                                "users.id",
+                                "users.city",
+                                "users.createdAt",
+                            ],
+                        }
+                    ],
+                    "dimensions": [
+                        {
+                            "name": "users.city",
+                            "title": "Users City",
+                            "type": "string",
+                            "aliasName": "users.city",
+                            "shortTitle": "City",
+                            "suggestFilterValues": True,
+                        }
+                    ],
+                    "segments": [],
+                }
+            ]
+        },
+    )
+
+    # act
+    output = await list_cubes(auth=CubeJSAuth(token="token", host="https://host"))
+
+    # assert
+    assert isinstance(output, CubeJSMetaResponse)
+    assert len(output.cubes) == 1
+    assert output.cubes[0].name == "Users"
+    assert output.cubes[0].title == "Users"
+    assert output.cubes[0].meta["someKey"] == "someValue"
+    assert output.cubes[0].meta["nested"]["someKey"] == "someValue"
+    assert output.cubes[0].connected_component == 1
+    assert output.cubes[0].measures[0].short_title == "Count"
+    assert output.cubes[0].measures[0].alias_name == "users.count"
+    assert output.cubes[0].measures[0].agg_type == "count"
+    assert output.cubes[0].measures[0].drill_members == [
+        "users.id",
+        "users.city",
+        "users.createdAt",
+    ]
+    assert output.cubes[0].dimensions[0].short_title == "City"
+    assert output.cubes[0].dimensions[0].suggest_filter_values is True
+    assert output.cubes[0].segments == []
+
+
+@pytest.mark.asyncio
+async def test_list_cubes_raises_on_request_error(httpx_mock):
+    # arrange
+    httpx_mock.add_response(
+        method="GET",
+        url="https://host/cubejs-api/v1/meta",
+        status_code=400,
+        text="bad request",
+    )
+
+    # act / assert
+    with pytest.raises(errors.RequestError):
+        await list_cubes(auth=CubeJSAuth(token="token", host="https://host"))
 
 
 def test_error_handler():

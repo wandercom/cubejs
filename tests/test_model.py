@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from cubejs import (
+    CubeJSMetaResponse,
     CubeJSRequest,
     Filter,
     FilterOperators,
@@ -287,3 +288,75 @@ class TestCubeJSRequest:
         serialized = request.model_dump(by_alias=True)
         assert "timeDimensions" in serialized
         assert "dateRange" in serialized["timeDimensions"][0]
+
+
+class TestCubeJSMetaResponse:
+    """Test suite for CubeJSMetaResponse model."""
+
+    def test_full_meta_schema(self):
+        """Test parsing complete metadata schema with aliases."""
+        response = CubeJSMetaResponse(
+            cubes=[
+                {
+                    "name": "Users",
+                    "title": "Users",
+                    "meta": {
+                        "someKey": "someValue",
+                        "nested": {"someKey": "someValue"},
+                    },
+                    "connectedComponent": 1,
+                    "measures": [
+                        {
+                            "name": "users.count",
+                            "title": "Users Count",
+                            "shortTitle": "Count",
+                            "aliasName": "users.count",
+                            "type": "number",
+                            "aggType": "count",
+                            "drillMembers": [
+                                "users.id",
+                                "users.city",
+                                "users.createdAt",
+                            ],
+                        }
+                    ],
+                    "dimensions": [
+                        {
+                            "name": "users.city",
+                            "title": "Users City",
+                            "type": "string",
+                            "aliasName": "users.city",
+                            "shortTitle": "City",
+                            "suggestFilterValues": True,
+                        }
+                    ],
+                    "segments": [],
+                }
+            ]
+        )
+
+        assert response.cubes[0].connected_component == 1
+        assert response.cubes[0].measures[0].short_title == "Count"
+        assert response.cubes[0].measures[0].alias_name == "users.count"
+        assert response.cubes[0].measures[0].agg_type == "count"
+        assert response.cubes[0].measures[0].drill_members == [
+            "users.id",
+            "users.city",
+            "users.createdAt",
+        ]
+        assert response.cubes[0].dimensions[0].short_title == "City"
+        assert response.cubes[0].dimensions[0].suggest_filter_values is True
+
+        serialized = response.model_dump(by_alias=True)
+        assert serialized["cubes"][0]["connectedComponent"] == 1
+        assert serialized["cubes"][0]["measures"][0]["shortTitle"] == "Count"
+        assert serialized["cubes"][0]["measures"][0]["aliasName"] == "users.count"
+        assert serialized["cubes"][0]["measures"][0]["aggType"] == "count"
+        assert serialized["cubes"][0]["measures"][0]["drillMembers"] == [
+            "users.id",
+            "users.city",
+            "users.createdAt",
+        ]
+        assert (
+            serialized["cubes"][0]["dimensions"][0]["suggestFilterValues"] is True
+        )

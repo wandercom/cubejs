@@ -1,6 +1,9 @@
 """Data model."""
 
+from __future__ import annotations
+
 from enum import Enum
+from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -234,3 +237,72 @@ class CubeJSResponse(BaseModel):
     """
 
     data: list[dict[str, str | int | float | None]]
+
+
+class CubeJSMetaCube(BaseModel):
+    """CubeJS metadata entry for a cube or view."""
+
+    name: str
+    title: str
+    type: str | None = None
+    meta: dict[str, Any] | None = None
+    connected_component: int | None = Field(default=None, alias="connectedComponent")
+    measures: list[CubeJSMetaMeasure] = Field(default_factory=list)
+    dimensions: list[CubeJSMetaDimension] = Field(default_factory=list)
+    segments: list[CubeJSMetaSegment] = Field(default_factory=list)
+
+    class Config:  # noqa: D106
+        populate_by_name = True
+
+
+class CubeJSMetaMeasure(BaseModel):
+    """CubeJS measure metadata."""
+
+    name: str
+    title: str
+    type: str
+    short_title: str | None = Field(default=None, alias="shortTitle")
+    alias_name: str | None = Field(default=None, alias="aliasName")
+    agg_type: str | None = Field(default=None, alias="aggType")
+    drill_members: list[str] = Field(default_factory=list, alias="drillMembers")
+
+    class Config:  # noqa: D106
+        populate_by_name = True
+
+
+class CubeJSMetaDimension(BaseModel):
+    """CubeJS dimension metadata."""
+
+    name: str
+    title: str
+    type: str
+    short_title: str | None = Field(default=None, alias="shortTitle")
+    alias_name: str | None = Field(default=None, alias="aliasName")
+    suggest_filter_values: bool | None = Field(
+        default=None, alias="suggestFilterValues"
+    )
+
+    class Config:  # noqa: D106
+        populate_by_name = True
+
+
+class CubeJSMetaSegment(BaseModel):
+    """CubeJS segment metadata."""
+
+    name: str
+    title: str
+    short_title: str | None = Field(default=None, alias="shortTitle")
+
+    class Config:  # noqa: D106
+        populate_by_name = True
+
+
+class CubeJSMetaResponse(BaseModel):
+    """CubeJS metadata response.
+
+    Args:
+        cubes: cubejs metadata entries for cubes and views.
+
+    """
+
+    cubes: list[CubeJSMetaCube] = Field(default_factory=list)

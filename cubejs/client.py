@@ -13,7 +13,7 @@ from cubejs.errors import (
     ServerError,
     UnexpectedResponseError,
 )
-from cubejs.model import CubeJSAuth, CubeJSRequest, CubeJSResponse
+from cubejs.model import CubeJSAuth, CubeJSMetaResponse, CubeJSRequest, CubeJSResponse
 
 
 def _error_handler(response: httpx.Response) -> None:
@@ -76,3 +76,37 @@ async def get_measures(auth: CubeJSAuth, request: CubeJSRequest) -> CubeJSRespon
     cube_js_response = CubeJSResponse(**response.json())
     logger.debug("CubeJS response succesfully received!")
     return cube_js_response
+
+
+@tenacity.retry(
+    retry=tenacity.retry_if_exception_type(RetryableError),
+    wait=tenacity.wait_exponential(multiplier=2, min=1, max=30),
+    stop=tenacity.stop_after_attempt(5),
+)
+async def list_cubes(auth: CubeJSAuth) -> CubeJSMetaResponse:
+    """List cubes and views available in cubejs metadata endpoint.
+
+    Args:
+        auth: cubejs auth.
+
+    Returns:
+        CubeJS metadata response with available cubes and views.
+
+    Raises:
+        AuthorizationError: if the request is not authorized.
+        RequestError: if the request is invalid.
+        ContinueWaitError: if the request is not ready yet.
+        ServerError: if the server is not available.
+        UnexpectedResponseError: if the response is unexpected.
+
+    """
+    logger.debug(f"Listing cubes from {auth.host}")
+    url = f"{auth.host}/cubejs-api/v1/meta"
+    headers = {"Authorization": auth.token}
+    async with httpx.AsyncClient(timeout=60) as client:
+        response = await client.get(url=url, headers=headers)
+        _error_handler(response)
+
+    meta_response = CubeJSMetaResponse(**response.json())
+    logger.debug(f"Retrieved {len(meta_response.cubes)} cubes/views from metadata")
+    return meta_response
